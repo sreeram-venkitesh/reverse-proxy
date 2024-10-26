@@ -42,7 +42,25 @@ Accept: */*
 go run main.go
 ```
 
-The reverse proxy is configured to run on port 8080. If you access localhost:8080 after the reverse proxy is started, your request will be proxied to traefik/whoami running on port 9000 and you'll get the response from traefik/whoami. You can try this for the different paths served by traefik/whoami such as `/api`, `/bench` and so on.
+The reverse proxy is configured to run on port 8080. This is currently configured from the `config.yaml` file. You can define routers and services from this file. An example config.yaml file is as shown below:
+
+```yaml
+port: 8080
+
+routers:
+  - host: iamfoo.localhost:8080
+    service: whoami
+  - host: testing.localhost:8080
+    service: whoami
+
+services:
+  - name: whoami
+    url: "http://localhost:9000"
+```
+
+Under services you can define your services to which you want to proxy requests to. These are like services in the Traefik configuration. Under routers you can define how to map different urls to these services. This is similar to the Traefik router configuration or the IngressRoute CRD in a way. 
+
+If you access `iamfoo.localhost:8080` after the reverse proxy is started with the above configuration, your request will be proxied to traefik/whoami running on `localhost:9000` and you'll get the response from traefik/whoami. You can try this for the different paths served by traefik/whoami such as `/api`, `/bench` and so on across the different routers that you've defined.
  
 ```bash
 $ curl -v localhost:8080

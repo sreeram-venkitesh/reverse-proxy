@@ -1,0 +1,13 @@
+port: 8080
+
+routers:
+  - host: iamfoo.localhost:8080
+    service: whoami
+  - host: testing.localhost:8080
+    service: whoami
+  - host: sreeram.localhost:8080
+    service: whoami
+
+services:
+  - name: whoami
+    url: "http://localhost:9000"
