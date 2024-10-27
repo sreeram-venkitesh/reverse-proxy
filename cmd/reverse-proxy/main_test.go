@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/sreeram-venkitesh/reverse-proxy/pkg/config"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -66,7 +68,7 @@ port: 8080
 				configPath = test.configFilePath
 			}
 
-			_, err = loadConfig(configPath)
+			_, err = config.LoadConfig(configPath)
 
 			if test.expectedError != "" {
 				if err == nil {
