@@ -2,6 +2,9 @@ package config
 
 import (
 	"fmt"
+	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 // Definitions for the config file
@@ -29,4 +32,21 @@ func (c *Config) GetServiceUrl(name string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("Service not found\n")
+}
+
+func LoadConfig(configPath string) (Config, error) {
+	var runtimeConfig Config
+
+	// Read the config file
+	yamlConfig, err := os.ReadFile(configPath)
+	if err != nil {
+		return runtimeConfig, fmt.Errorf("Error reading config.yaml: %v", err)
+	}
+
+	err = yaml.Unmarshal(yamlConfig, &runtimeConfig)
+	if err != nil {
+		return runtimeConfig, fmt.Errorf("Error parsing config.yaml: %v", err)
+	}
+
+	return runtimeConfig, nil
 }
