@@ -39,7 +39,7 @@ Accept: */*
 ### 2. Start the reverse proxy server
 
 ```bash
-go run main.go
+go run cmd/reverse-proxy/main.go
 ```
 
 The reverse proxy is configured to run on port 8080. This is currently configured from the `config.yaml` file. You can define routers and services from this file. An example config.yaml file is as shown below:
