@@ -5,12 +5,15 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/patrickmn/go-cache"
+
 	"github.com/sreeram-venkitesh/reverse-proxy/pkg/config"
 )
 
 func HandleRequest(cfg config.Config) http.HandlerFunc {
-	return func(rw http.ResponseWriter, r *http.Request) {
+	proxyCache := cache.New(defaultExpiration, purgeTime)
 
+	return func(rw http.ResponseWriter, r *http.Request) {
 		// Based on incoming request we use the host name to find
 		// the router and the service url it is pointing to from
 		// the config.yaml file.
@@ -35,6 +38,29 @@ func HandleRequest(cfg config.Config) http.HandlerFunc {
 
 		// Once we get the service url, we will proxy our request to the url.
 		targetUrl := fmt.Sprintf("%s%s", serviceUrl, r.URL.Path)
+
+		cacheKey := generateCacheKey(r.Method, targetUrl, r.Header)
+
+		// If response exists in cache, we read the data from cache and 
+		// return the cached response to the client
+		if cachedResponse, found := proxyCache.Get(cacheKey); found {
+			response := cachedResponse.(*CachedResponse)
+
+			for header, values := range response.Headers {
+				for _, value := range values {
+					rw.Header().Set(header, value)
+				}
+			}
+
+			rw.Header().Set("X-Proxy-Cache", "HIT")
+			rw.WriteHeader(response.StatusCode)
+
+			rw.Write(response.Body)
+			return
+		}
+
+		rw.Header().Set("X-Proxy-Cache", "MISS")
+
 		proxyRequest, err := http.NewRequest(r.Method, targetUrl, r.Body)
 		if err != nil {
 			http.Error(rw, "Error creating proxy", http.StatusInternalServerError)
@@ -57,6 +83,12 @@ func HandleRequest(cfg config.Config) http.HandlerFunc {
 		}
 		defer res.Body.Close()
 
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			http.Error(rw, "Error reading response body", http.StatusInternalServerError)
+			return
+		}
+
 		// Copying headers from target server's response to the proxy response
 		for header, values := range res.Header {
 			for _, value := range values {
@@ -64,8 +96,16 @@ func HandleRequest(cfg config.Config) http.HandlerFunc {
 			}
 		}
 
-		rw.WriteHeader(res.StatusCode)
+		if shouldCache(r.Method, res.StatusCode) {
+			cachedResponse := &CachedResponse{
+				Body:       body,
+				Headers:    res.Header.Clone(),
+				StatusCode: res.StatusCode,
+			}
+			proxyCache.Set(cacheKey, cachedResponse, defaultExpiration)
+		}
 
-		io.Copy(rw, res.Body)
+		rw.WriteHeader(res.StatusCode)
+		rw.Write(body)
 	}
 }
