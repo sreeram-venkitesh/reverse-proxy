@@ -3,6 +3,7 @@ package proxy
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 
 	"github.com/patrickmn/go-cache"
@@ -73,6 +74,9 @@ func HandleRequest(cfg config.Config) http.HandlerFunc {
 				proxyRequest.Header.Add(header, value)
 			}
 		}
+
+		remoteAddress, _, _ := net.SplitHostPort(r.RemoteAddr)
+		proxyRequest.Header.Set("X-Forwarded-For", remoteAddress)
 
 		// Proxy forwarding the request to target
 		client := &http.Client{}
