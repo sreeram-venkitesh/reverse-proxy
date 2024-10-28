@@ -27,5 +27,9 @@ func main() {
 	}
 
 	log.Printf("Started server on port: %d\n", runtimeConfig.Port)
-	log.Fatal(s.ListenAndServe())
+	if runtimeConfig.UseHttps {
+		log.Fatal(s.ListenAndServeTLS(runtimeConfig.CertFile, runtimeConfig.KeyFile))
+	} else {
+		log.Fatal(s.ListenAndServe())
+	}
 }

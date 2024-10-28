@@ -11,6 +11,9 @@ import (
 // which defines routers and services
 type Config struct {
 	Port     int       `yaml:"port"`
+	UseHttps bool      `yaml:"useHttps"`
+	CertFile string    `yaml:"certFile"`
+	KeyFile  string    `yaml:"keyFile"`
 	Routers  []Router  `yaml:"routers"`
 	Services []Service `yaml:"services"`
 }

@@ -1,4 +1,7 @@
 port: 8080
+# useHttps: true
+# certFile: "certs/cert.pem"
+# keyFile: "certs/key.pem"
 
 routers:
   - host: iamfoo.localhost:8080
