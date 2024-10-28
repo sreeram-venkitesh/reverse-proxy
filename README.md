@@ -46,6 +46,9 @@ The reverse proxy is configured to run on port 8080. This is currently configure
 
 ```yaml
 port: 8080
+useHttps: false
+certFile: "certs/cert.pem"
+keyFile: "certs/key.pem"
 
 routers:
   - host: iamfoo.localhost:8080
@@ -93,4 +96,12 @@ Cleanup the traefik/whoami container.
 
 ```bash
 make stop
+```
+
+## Running tests
+
+Run all the tests across the project:
+
+```bash
+go test -v ./...
 ```
